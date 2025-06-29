@@ -1,0 +1,4 @@
+package mygroovyPackage
+
+class PlaceHolder {
+}

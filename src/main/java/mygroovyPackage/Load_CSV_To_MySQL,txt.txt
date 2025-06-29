@@ -1,0 +1,30 @@
+
+CREATE TABLE 'CSVImport' (id INT);
+ALTER TABLE CSVImport ADD COLUMN Title VARCHAR(256);
+ALTER TABLE CSVImport ADD COLUMN Company VARCHAR(256);
+ALTER TABLE CSVImport ADD COLUMN NumTickets VARCHAR(256);
+...
+ALTER TABLE CSVImport Date49 ADD COLUMN Date49 VARCHAR(256);
+ALTER TABLE CSVImport Date50 ADD COLUMN Date50 VARCHAR(256);
+
+/////////////
+
+LOAD DATA INFILE "/home/paul/clientdata.csv"
+INTO TABLE CSVImport
+COLUMNS TERMINATED BY ','
+OPTIONALLY ENCLOSED BY '"'
+ESCAPED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES;
+
+/////////////
+
+mysqlimport --ignore-lines=1 \
+            --fields-terminated-by=, \
+            --local -u root \
+            -p Database \
+             TableName.csv
+			 
+/////////////////
+
+To open the Import textfile" dialog, go to Tools > Import CSV file:

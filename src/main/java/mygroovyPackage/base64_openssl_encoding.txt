@@ -1,0 +1,103 @@
+
+Base64 encoding is a binary-to-text encoding scheme that converts binary data into an ASCII string format
+
+////////////////
+
+openssl Encoding
+
+1>DER (binary data which is non readable)
+
+Distinguished Encoding Rules (DER) is an encoding rule which can be used for private keys, public keys and certificates.
+
+It is the default format for most browsers, and is stored according to the ASN.1 DER format. It is headerless - PEM is text header wrapped DER.
+
+A DER (.der) format file contains binary data which is non readable.
+
+2>PEM (ASCII data base64 PEM encoding)
+
+Is is an IETF standard to provide data confidentiality, data integrity, and data origin authentication for electronic mail.
+
+PEM encrypts messages with DES in CBC mode, provides key distribution of DES keys by encrypting them with RSA, and signs messages with RSA over either MD2 or MD5. To establish ownership of public keys, PEM uses a certification hierarchy, with X.509 public-key certificates and X.509 CRLs that are signed with RSA and MD2.
+
+PEM is designed to be compatible with a wide range of key management methods, but is limited to specifying security services only for text messages and has not been widely implemented in the Internet.
+
+In short PEM can contain all of private keys (RSA and DSA), public keys (RSA and DSA) and (x509) certificates. It stores data Base64 encoded DER format, surrounded by ASCII headers, so is suitable for text mode transfers between systems.
+
+A PEM(.pem) format file contains ASCII data (= base64 PEM encoding ).
+
+A PEM - .pem format digital certificate begins and ends with the following lines, respectively:
+
+-----BEGIN CERTIFICATE-----
+:
+-----END CERTIFICATE-----
+
+
+A PEM - .pem format private key file begins and ends with the following lines, respectively:
+
+-----BEGIN ENCRYPTED PRIVATE KEY-----
+:
+-----END ENCRYPTED PRIVATE KEY-----
+
+3>PKCS#12 (binary format)
+
+Public Key Cryptography Standards #12 (PKCS#12) can contain all private keys, public keys, and certificates. It stores in a binary format, and is also known as PFX files.
+
+Browsers usually requires this format to load certificates.
+
+4>Cerfificate formats
+
+For certificates, the available formats are PEM, DER and PKCS12 with file names of the following type:
+cert.pem (PEM)
+
+cert.der (DER)
+
+cert.p12 (PKCS12)
+
+5>X.509
+
+X.509 is a standard specifying the contents of a digital certificates.
+A certificate is a document, issued by a trusted agent, stating that the public key of the person named in the document has a certain value. You are most likely to encounter certificates when you use a web browser. The ITU-T X.509 Recommendation specifies a certificate using ASN.1 and encodes it using DER.
+
+////////////////
+
+1>.csr - 
+This is a Certificate Signing Request. Some applications can generate these for submission to certificate-authorities. The actual format is PKCS10 which is defined in RFC 2986. It includes some/all of the key details of the requested certificate such as subject, organization, state, whatnot, as well as the public key of the certificate to get signed. These get signed by the CA and a certificate is returned. The returned certificate is the public certificate (which includes the public key but not the private key), which itself can be in a couple of formats
+
+2>.pem - 
+Defined in RFC 1422 (part of a series from 1421 through 1424) this is a container format that may include just the public certificate (such as with Apache installs, and CA certificate files /etc/ssl/certs), or may include an entire certificate chain including public key, private key, and root certificates. Confusingly, it may also encode a CSR (e.g. as used here) as the PKCS10 format can be translated into PEM. The name is from Privacy Enhanced Mail (PEM), a failed method for secure email but the container format it used lives on, and is a base64 translation of the x509 ASN.1 keys.
+
+3>.key - 
+This is a (usually) PEM formatted file containing just the private-key of a specific certificate and is merely a conventional name and not a standardized one. In Apache installs, this frequently resides in /etc/ssl/private. The rights on these files are very important, and some programs will refuse to load these certificates if they are set wrong
+
+4>.pkcs12 .pfx .p12 - 
+Originally defined by RSA in the Public-Key Cryptography Standards (abbreviated PKCS), the "12" variant was originally enhanced by Microsoft, and later submitted as RFC 7292. This is a password-protected container format that contains both public and private certificate pairs. Unlike .pem files, this container is fully encrypted. Openssl can turn this into a .pem file with both public and private keys: openssl pkcs12 -in file-to-convert.p12 -out converted-file.pem -nodes
+
+5>.der - (Base64 encoded)
+A way to encode ASN.1 syntax in binary, a .pem file is just a Base64 encoded .der file. OpenSSL can convert these to .pem (openssl x509 -inform der -in to-convert.der -out converted.pem). Windows sees these as Certificate files. By default, Windows will export certificates as .DER formatted files with a different extension. Like..
+
+6>.cert .cer .crt - 
+A .pem (or rarely .der) formatted file with a different extension, one that is recognized by Windows Explorer as a certificate, which .pem is not.
+
+////////////////
+
+1>PEM
+
+PEM (originally “Privacy Enhanced Mail”) is the most common format for X.509 certificates, CSRs, and cryptographic keys. A PEM file is a text file containing one or more items in Base64 ASCII encoding, each with plain-text headers and footers (e.g. -----BEGIN CERTIFICATE----- and -----END CERTIFICATE-----). A single PEM file could contain an end-entity certificate, a private key, or multiple certificates forming a complete chain of trust.
+
+PEM files are usually seen with the extensions .crt, .pem, .cer, and .key (for private keys), but you may also see them with different extensions. For example, the SSL.com CA bundle file available from the download table in a certificate order has the extension .ca-bundle.
+
+2>Common PEM Conversions
+
+2a>View contents of PEM certificate file
+openssl x509 -in CERTIFICATE.pem -text -noout 
+
+2b>Convert PEM certificate with chain of trust to PKCS#7
+PKCS#7 (also known as P7B) is a container format for digital certificates that is most often found in Windows and Java server contexts, and usually has the extension .p7b. PKCS#7 files are not used to store private keys. In the example below, -certfile MORE.pem represents a file with chained intermediate and root certificates (such as a .ca-bundle file downloaded from SSL.com).
+
+openssl crl2pkcs7 -nocrl -certfile CERTIFICATE.pem -certfile MORE.pem -out CERTIFICATE.p7b
+
+2c>Convert PEM certificate with chain of trust and private key to PKCS#12
+PKCS#12 (also known as PKCS12 or PFX) is a common binary format for storing a certificate chain and private key in a single, encryptable file, and usually have the filename extensions .p12 or .pfx. In the example below, -certfile MORE.pem adds a file with chained intermediate and root certificates (such as a .ca-bundle file downloaded from SSL.com), and -inkey PRIVATEKEY.key adds the private key for CERTIFICATE.crt(the end-entity certificate). Please see this how-to for a more detailed explanation of the command shown.
+
+openssl pkcs12 -export -out CERTIFICATE.pfx -inkey PRIVATEKEY.key -in CERTIFICATE.crt -certfile MORE.crt
+
